@@ -4,15 +4,16 @@ import numpy as np
 import pickle
 import pandas as pd
 
-mp_drawing=mp.solutions.drawing_utils
-mp_pose= mp.solutions.pose
-
-cap = cv2.VideoCapture(0)
-previous='up'
-class_name=['down', 'up']
-counter=0
+mp_drawing=mp.solutions.drawing_utils           #To draw landmark point connection on image
+mp_pose= mp.solutions.pose                      #To detect landmark points on image
+vd=r"D:\AZH\Python Files\both.mp4"
+url="http://192.168.100.9:8080/video"
+cap = cv2.VideoCapture(vd)                      #Using webcam for input image 
+previous='up'                                   #Up class is our first class
+class_name=['down', 'up']                       #Class names array
+counter=0               
 Rep=0
-model = pickle.load(open("both_model.h5","rb"))
+model = pickle.load(open("both_model.h5","rb")) #load model file
 
 def knee_condition(leg,knee,hip):
     leg=np.array(leg)
@@ -24,21 +25,22 @@ def knee_condition(leg,knee,hip):
         angle=360-angle    
     return angle
 
+# This function is to calculate knee angle to prevent knee injury
 
     
 
 
 with mp_pose.Pose(min_detection_confidence=0.5,min_tracking_confidence=0.5) as pose:
     while (True):
-        cam,frame=cap.read()
-        results=pose.process(frame)
-        mp_drawing.draw_landmarks(frame,results.pose_landmarks,mp_pose.POSE_CONNECTIONS)
-        landmarks=results.pose_landmarks.landmark
-        print(landmarks)
+        cam,frame=cap.read()                                                                #Read image from camera
+        results=pose.process(frame)                                                         #Processing on image
+        mp_drawing.draw_landmarks(frame,results.pose_landmarks,mp_pose.POSE_CONNECTIONS)    #Draw landmarks
+        landmarks=results.pose_landmarks.landmark                                           #Landmarks for our next coming steps
+        
         
         try:
-            keypoints=np.array([[res.x,res.y,res.z,res.visibility] for res in results.pose_landmarks.landmark]).flatten()
-            keypoints=np.delete(keypoints,[0,1,2,3,4,5,6,7,8,9,10,11,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44])
+            keypoints=np.array([[res.x,res.y,res.z,res.visibility] for res in results.pose_landmarks.landmark]).flatten()       #
+            keypoints=np.delete(keypoints,[0:44])
             X=pd.DataFrame([keypoints])
             label = model.predict(X)[0]
             label= class_name[label]
