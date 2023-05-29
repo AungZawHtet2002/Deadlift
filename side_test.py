@@ -6,9 +6,8 @@ import pandas as pd
 
 mp_drawing=mp.solutions.drawing_utils           #To draw landmark point connection on image
 mp_pose= mp.solutions.pose                      #To detect landmark points on image
-vd=r"D:\AZH\Python Files\both.mp4"
 url="http://192.168.100.9:8080/video"
-cap = cv2.VideoCapture(vd)                      #Using webcam for input image 
+cap = cv2.VideoCapture(url)                      #Using webcam for input image 
 previous='up'                                   #Up class is our first class
 class_name=['down', 'up']                       #Class names array
 counter=0               
@@ -39,53 +38,53 @@ with mp_pose.Pose(min_detection_confidence=0.5,min_tracking_confidence=0.5) as p
         
         
         try:
-            keypoints=np.array([[res.x,res.y,res.z,res.visibility] for res in results.pose_landmarks.landmark]).flatten()       #
-            keypoints=np.delete(keypoints,[0:44])
-            X=pd.DataFrame([keypoints])
-            label = model.predict(X)[0]
-            label= class_name[label]
-            right=landmarks[mp_pose.PoseLandmark.RIGHT_KNEE.value].visibility
-            left=landmarks[mp_pose.PoseLandmark.LEFT_KNEE.value].visibility
-            if right>left:
-                leg=[landmarks[mp_pose.PoseLandmark.RIGHT_ANKLE.value].x,landmarks[mp_pose.PoseLandmark.RIGHT_ANKLE.value].y]
-                knee=[landmarks[mp_pose.PoseLandmark.RIGHT_KNEE.value].x,landmarks[mp_pose.PoseLandmark.RIGHT_KNEE.value].y]
-                hip=[landmarks[mp_pose.PoseLandmark.RIGHT_HIP.value].x,landmarks[mp_pose.PoseLandmark.RIGHT_HIP.value].y]
+            keypoints=np.array([[res.x,res.y,res.z,res.visibility] for res in results.pose_landmarks.landmark]).flatten()       #Flatten to one dimensional array 
+            keypoints=np.delete(keypoints,[0,1,2,3,4,5,6,7,8,9,10,11,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44])    #Delete face landmarks
+            X=pd.DataFrame([keypoints])                                                     #Convert np array to data frame
+            label = model.predict(X)[0]                                                     #Predict on input data frame 
+            label= class_name[label]                                                        #Output class
+            right=landmarks[mp_pose.PoseLandmark.RIGHT_KNEE.value].visibility               #Right knee visibility
+            left=landmarks[mp_pose.PoseLandmark.LEFT_KNEE.value].visibility                 #Left knee visibility
+            if right>left:        #Check left side or right side and if right side 
+                leg=[landmarks[mp_pose.PoseLandmark.RIGHT_ANKLE.value].x,landmarks[mp_pose.PoseLandmark.RIGHT_ANKLE.value].y]   #Right ankle x,y values
+                knee=[landmarks[mp_pose.PoseLandmark.RIGHT_KNEE.value].x,landmarks[mp_pose.PoseLandmark.RIGHT_KNEE.value].y]    #Right knee x,y values
+                hip=[landmarks[mp_pose.PoseLandmark.RIGHT_HIP.value].x,landmarks[mp_pose.PoseLandmark.RIGHT_HIP.value].y]       #Right hip x,y values
             
                 angle=knee_condition(leg,knee,hip)
-                if angle<60:
-                    output="Knee bent too much"
+                if angle<60:    #Defining threshold angle
+                    output="Knee bent too much"         #Bending knee less than 60' can cause knee, ankle injury 
                 else:
                     output="Perfect Form"
-            else:
-                leg=[landmarks[mp_pose.PoseLandmark.LEFT_ANKLE.value].x,landmarks[mp_pose.PoseLandmark.LEFT_ANKLE.value].y]
-                knee=[landmarks[mp_pose.PoseLandmark.LEFT_KNEE.value].x,landmarks[mp_pose.PoseLandmark.LEFT_KNEE.value].y]
-                hip=[landmarks[mp_pose.PoseLandmark.LEFT_HIP.value].x,landmarks[mp_pose.PoseLandmark.LEFT_HIP.value].y]
+            else:   #If left side
+                leg=[landmarks[mp_pose.PoseLandmark.LEFT_ANKLE.value].x,landmarks[mp_pose.PoseLandmark.LEFT_ANKLE.value].y] #Left ankle x,y values
+                knee=[landmarks[mp_pose.PoseLandmark.LEFT_KNEE.value].x,landmarks[mp_pose.PoseLandmark.LEFT_KNEE.value].y]  #Left knee x,y values
+                hip=[landmarks[mp_pose.PoseLandmark.LEFT_HIP.value].x,landmarks[mp_pose.PoseLandmark.LEFT_HIP.value].y]     #Left hip x,y values
+            
             
                 angle=knee_condition(leg,knee,hip)
-                if angle<60:
-                    output="Knee bent too much"
+                if angle<60:    #Defining threshold angle
+                    output="Knee bent too much"          #Bending knee less than 60' can cause knee, ankle injury 
                 else:
                     output="Perfect Form"
             
 
             if label!= previous:
                 counter+=1
-                Rep=int(counter/2)
+                Rep=int(counter/2)      #To count how many time we do in correct form
                 previous=label
             
 
-            cv2.putText(frame,"Class:",(10,50),cv2.FONT_HERSHEY_SIMPLEX,2,(0,255,0),1,cv2.LINE_AA)
-            cv2.putText(frame,label,(200,50),cv2.FONT_HERSHEY_SIMPLEX,2,(0,255,0),2,cv2.LINE_AA)
-            # cv2.putText(frame,"Hand:",(10,100),cv2.FONT_HERSHEY_SIMPLEX,0.8,(150,255,0),1,cv2.LINE_AA)
-            cv2.putText(frame,output,(200,100),cv2.FONT_HERSHEY_SIMPLEX,0.8,(0,0,255),2,cv2.LINE_AA)
-            # cv2.putText(frame,"Leg:",(10,150),cv2.FONT_HERSHEY_SIMPLEX,0.8,(150,255,0),1,cv2.LINE_AA)
-            # cv2.putText(frame,str(angle),(200,120),cv2.FONT_HERSHEY_SIMPLEX,0.8,(0,255,0),2,cv2.LINE_AA)
-            cv2.putText(frame,"Rep:",(10,500),cv2.FONT_HERSHEY_SIMPLEX,2,(255,0,200),1,cv2.LINE_AA)
-            cv2.putText(frame,str(Rep),(200,500),cv2.FONT_HERSHEY_SIMPLEX,2,(255,0,200),2,cv2.LINE_AA)
+            cv2.putText(frame,"Position:",(10,50),cv2.FONT_HERSHEY_SIMPLEX,2,(0,255,0),1,cv2.LINE_AA)   #To put text on image
+            cv2.putText(frame,label,(200,50),cv2.FONT_HERSHEY_SIMPLEX,2,(0,255,0),2,cv2.LINE_AA)        #To put output result on image
+            
+            cv2.putText(frame,output,(200,100),cv2.FONT_HERSHEY_SIMPLEX,0.8,(0,0,255),2,cv2.LINE_AA)    #To put text when we are doing right or wrong form
+            
+            cv2.putText(frame,"Rep:",(10,500),cv2.FONT_HERSHEY_SIMPLEX,2,(255,0,200),1,cv2.LINE_AA)     #To put repetation how many we do
+            cv2.putText(frame,str(Rep),(200,500),cv2.FONT_HERSHEY_SIMPLEX,2,(255,0,200),2,cv2.LINE_AA)  #To put repetation how many we do
         except Exception as e: 
             pass
-        cv2.imshow("Webcam",frame)    
-        if cv2.waitKey(1) & 0xFF == ord('q'):
+        cv2.imshow("Webcam",frame)              #Show real time video output
+        if cv2.waitKey(1) & 0xFF == ord('q'):   #Break if you press q on keyboard
             break
 
 cap.release()
